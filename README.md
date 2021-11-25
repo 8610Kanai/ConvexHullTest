@@ -1,2 +1,2 @@
 # ConvexHullTest
-Compute convex hull by Graham scan.
+Create convex hull from xfile.
