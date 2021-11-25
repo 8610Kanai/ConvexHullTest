@@ -2,15 +2,6 @@
 #include "DX9.hpp"
 
 
-struct LineSegmentVertex
-{
-	float x, y, z;
-	float nx, ny, nz;
-	float color;
-
-	static const DWORD FVF = (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE);
-};
-
 class LineSegment
 {
 public:

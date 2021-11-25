@@ -1,5 +1,7 @@
 #include "LineSegment.hpp"
 
+#include "CustomVertex.hpp"
+
 LineSegment::LineSegment()
 	: start({ 0,0,0 }), end({ 0,0,0 })
 	, offset({ 0,0,0 }), scaling({ 0,0,0 })
@@ -21,13 +23,13 @@ LineSegment::~LineSegment()
 
 void LineSegment::Init()
 {
-	LineSegmentVertex vertices[2] =
+	CustomVertex_xyz_normal_diffuse vertices[2] =
 	{
 		{0, 0, 0,  0, 1, 0,  0xffffff},
 		{1, 0, 0,  0, 1, 0,  0xffffff}
 	};
 
-	if (SUCCEEDED(DX9::instance->pDevice->CreateVertexBuffer(sizeof(vertices), 0, (LineSegmentVertex::FVF), D3DPOOL_MANAGED, &this->vertexBuffer, 0)))
+	if (SUCCEEDED(DX9::instance->pDevice->CreateVertexBuffer(sizeof(vertices), 0, (CustomVertex_xyz_normal_diffuse::FVF), D3DPOOL_MANAGED, &this->vertexBuffer, 0)))
 	{
 		void* tempVB;
 		if (SUCCEEDED(this->vertexBuffer->Lock(0, sizeof(vertices), &tempVB, 0)))
@@ -78,8 +80,8 @@ void LineSegment::Render()
 {
 	DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &this->worldMatrix);
 	DX9::instance->pDevice->SetTexture(0, nullptr);
-	DX9::instance->pDevice->SetStreamSource(0, this->vertexBuffer, 0, sizeof(LineSegmentVertex));
-	DX9::instance->pDevice->SetFVF(LineSegmentVertex::FVF);
+	DX9::instance->pDevice->SetStreamSource(0, this->vertexBuffer, 0, sizeof(CustomVertex_xyz_normal_diffuse));
+	DX9::instance->pDevice->SetFVF(CustomVertex_xyz_normal_diffuse::FVF);
 	DX9::instance->pDevice->SetMaterial(&this->material);
 	DX9::instance->pDevice->DrawPrimitive(D3DPT_LINELIST, 0, 2);
 }

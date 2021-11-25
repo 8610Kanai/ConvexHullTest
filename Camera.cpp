@@ -3,7 +3,7 @@
 
 Camera::Camera(const HWND* hWnd)
 	: eye(0, 3, -3), at(0, 0, 0), up(0, 1, 0), view(), proj()
-    , mousePos(), preMousePos(), cameraSpeed(0.02f)
+    , mousePos(), preMousePos(), cameraSpeed(0.025f)
 {
 	D3DXMatrixLookAtLH(&this->view, &this->eye, &this->at, &this->up);
 	DX9::instance->pDevice->SetTransform(D3DTS_VIEW, &this->view);
@@ -20,7 +20,7 @@ Camera::Camera(const HWND* hWnd)
 Camera::~Camera()
 {}
 
-void Camera::MoveFirstPerson(const HWND* hWnd)
+void Camera::MoveFPS(const HWND* hWnd)
 {
     // マウスの前フレームからの移動方向(長さあり)
     D3DXVECTOR3 mouseDirection =

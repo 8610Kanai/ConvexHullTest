@@ -9,7 +9,7 @@ public:
 	Camera(const HWND* hWnd);
 	~Camera();
 
-	void MoveFirstPerson(const HWND* hWnd);
+	void MoveFPS(const HWND* hWnd);
 
 private:
 	

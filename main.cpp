@@ -9,6 +9,7 @@
 #include "LineSegment.hpp"
 #include "ConvexHull.hpp"
 #include "Camera.hpp"
+#include "Point.hpp"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -96,17 +97,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     ///////////////////////////////////////////////////////
     // test
 
-    auto line = std::make_unique<LineSegment>();/*
-    D3DXVECTOR3 start(-10, 0, 0), end(20,0,0);
-    line->SetStartEnd(&start, &end);*/
-    line->SetMaterial({ .Emissive = {1, 1, 0} });
-
     ID3DXBuffer* materials;
     DWORD numMaterials;
     ID3DXMesh* mesh;
-    HRESULT hr = D3DXLoadMeshFromX //"res/YokohamaArena.x",
+    HRESULT hr = D3DXLoadMeshFromX
     (
-        "res/koro_kari.x",
+        "res/YokohamaArena.x",
         D3DXMESH_MANAGED,
         DX9::instance->pDevice,
         NULL,
@@ -126,6 +122,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     mesh->GetVertexBuffer(&vertexBuff);
     auto convexHull = std::make_unique<ConvexHull>(vertexBuff);
 
+
     ///////////////////////////////////////////////////////
     ///// main loop
 
@@ -141,27 +138,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         }
         else
         {
-            camera->MoveFirstPerson(&hWnd);
+            camera->MoveFPS(&hWnd);
 
             DX9::instance->pDevice->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x192f60, 1.0f, 0);
             if (SUCCEEDED(DX9::instance->pDevice->BeginScene()))
             {
-                D3DXVECTOR3 start(-10, 0, 0), end(20,0,0);
-                line->SetStartEnd(&start, &end);
-                line->Render();
-                start = {0, -10, 0}; end = {0, 10, 0};
-                line->SetStartEnd(&start, &end);
-                line->Render();
-                start = {0, 0, -10}; end = {0, 0,  10};
-                line->SetStartEnd(&start, &end);
-                line->Render();
-
                 convexHull->Render();
 
-                if (GetKeyState(VK_SPACE) < 0)
+                if (GetKeyState(VK_SPACE) >= 0)
                 {
                     D3DXMATRIX world;
-                    D3DXMatrixScaling(&world, 1, 1, 1);
+                    D3DXMatrixIdentity(&world);
                     world._41 = 0;
                     DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &world);
                     for (int i = 0; i < numMaterials; ++i)
@@ -171,26 +158,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
                         mesh->DrawSubset(i);
                     }
                 }
-
-                //D3DXMatrixScaling(&world, 2, 2, 2);
-                //world._41 = 3;
-                //DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &world);
-                //for (int i = 0; i < numMaterials; ++i)
-                //{
-                //    D3DXMATERIAL mat = ((D3DXMATERIAL*)(materials->GetBufferPointer()))[i];
-                //    DX9::instance->pDevice->SetMaterial(&(mat.MatD3D));
-                //    mesh->DrawSubset(i);
-                //}
-
-                //D3DXMatrixScaling(&world, 0.5f, 0.5f, 0.5f);
-                //world._41 = -3;
-                //DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &world);
-                //for (int i = 0; i < numMaterials; ++i)
-                //{
-                //    D3DXMATERIAL mat = ((D3DXMATERIAL*)(materials->GetBufferPointer()))[i];
-                //    DX9::instance->pDevice->SetMaterial(&(mat.MatD3D));
-                //    mesh->DrawSubset(i);
-                //}
 
                 DX9::instance->pDevice->EndScene();
             }
