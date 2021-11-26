@@ -28,15 +28,15 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer)
 {
     if (!pInVertexBuffer) return false;
 
-    // 頂点バッファーの情報を取得
+    // get desc
     D3DVERTEXBUFFER_DESC desc = {};
     pInVertexBuffer->GetDesc(&desc);
 
-    // 頂点データのレイアウト
+    // set decl
     D3DVERTEXELEMENT9 elm[MAX_FVF_DECL_SIZE];
     D3DXDeclaratorFromFVF(desc.FVF, elm);
 
-    // 座標情報(D3DFVF_XYZ)までのオフセット値 取得
+    // offset (D3DFVF_XYZ)
     WORD offset = 0;
     for (int i = 0; i < D3DXGetDeclLength(elm); ++i)
     {
@@ -46,7 +46,8 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer)
             break;
         }
     }
-    // FVFからCustomVertexのサイズを取得
+
+    // CustomVertex size
     unsigned vertexSize = D3DXGetFVFVertexSize(desc.FVF);
     unsigned verticesSize = desc.Size;
     unsigned vertexNum = verticesSize / vertexSize;

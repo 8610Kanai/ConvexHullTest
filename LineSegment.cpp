@@ -44,7 +44,6 @@ void LineSegment::Init()
 
 void LineSegment::SetStartEnd(const D3DXVECTOR3* start, const D3DXVECTOR3* end)
 {
-	// ’·‚³‚ ‚è‚Ì•ûŒü
 	D3DXVECTOR3 direction = *end - *start;
 
 	this->offset = *start;
@@ -53,21 +52,17 @@ void LineSegment::SetStartEnd(const D3DXVECTOR3* start, const D3DXVECTOR3* end)
 	D3DXVECTOR3 normalizedDirection = {};
 	D3DXVec3Normalize(&normalizedDirection, &direction);
 
-	// ‰ñ“]Ž²
 	D3DXVECTOR3 baseDirection(1,0,0);
 	D3DXVECTOR3 rotationAxis(0,0,0);
 	D3DXVec3Cross(&rotationAxis, &baseDirection, &normalizedDirection);
 	if (D3DXVec3LengthSq(&rotationAxis) <= FLT_EPSILON) rotationAxis = { 0,0,1 };
 
-	// ‰ñ“]—Ê
 	float radian = acosf(D3DXVec3Dot(&baseDirection, &normalizedDirection));
 
-	// ‰ñ“]
 	D3DXQUATERNION tempQuat(0,0,0,1);
 	D3DXQuaternionRotationAxis(&tempQuat, &rotationAxis, radian);
 	D3DXMatrixRotationQuaternion(&this->rotationMatrix, &tempQuat);
 
-	// s—ñ‚É“K—p
 	D3DXMATRIX scaleMatrix;
 	D3DXMatrixScaling(&scaleMatrix, this->scaling.x, this->scaling.y, this->scaling.z);
 	this->worldMatrix = scaleMatrix * rotationMatrix;

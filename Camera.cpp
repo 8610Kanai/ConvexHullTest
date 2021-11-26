@@ -22,7 +22,6 @@ Camera::~Camera()
 
 void Camera::MoveFPS(const HWND* hWnd)
 {
-    // マウスの前フレームからの移動方向(長さあり)
     D3DXVECTOR3 mouseDirection =
     {
         static_cast<float>(this->mousePos.x - this->preMousePos.x),
@@ -30,10 +29,8 @@ void Camera::MoveFPS(const HWND* hWnd)
         0.0f
     };
 
-    // 視線ベクトル(正規化)
     D3DXVECTOR3 lookVec(this->view._13, this->view._23, this->view._33);
 
-    // 視点移動
     this->at += D3DXVECTOR3(lookVec.z * mouseDirection.x, mouseDirection.y, -lookVec.x * mouseDirection.x) * 0.05f;
 
     auto MoveCameraBody = [&lookVec, this](float right, float up, float forward)
