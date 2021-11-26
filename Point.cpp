@@ -19,7 +19,7 @@ Point::~Point()
 
 void Point::Init()
 {
-	float a = 0.01f;
+	float a = 0.005f;
 	CustomVertex_xyz_normal_diffuse vertices[] =
 	{
 		{-a,-a,-a,-a,-a,-a,0xffffff},

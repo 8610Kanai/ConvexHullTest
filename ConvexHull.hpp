@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <vector>
 #include "DX9.hpp"
 #include "LineSegment.hpp"
@@ -18,10 +19,10 @@ public:
 private:
 
 	// fetch vertices from vertexBuffer
-	bool GetVerticesFromBuffer(IDirect3DVertexBuffer9* vertexBuffer, std::vector<D3DXVECTOR3>* pOutVertices);
+	bool GetVerticesFromBuffer(IDirect3DVertexBuffer9* vertexBuffer);
 
 	// create convex hull from vertices
-	void CreateConvexHull();
+	bool CreateConvexHull();
 
 
 public:
@@ -30,12 +31,15 @@ public:
 private:
 
 	// 
-	std::vector<D3DXVECTOR3> vertices;
+	std::vector<D3DXVECTOR3> origineVertices;
 	std::vector<Face> faces;
+	std::vector<Face> temps;
 
 	// use draw
 	std::unique_ptr<LineSegment> line;
 	std::unique_ptr<Point> point;
+
+	bool completed;
 
 };
 
@@ -45,6 +49,7 @@ struct Face
 	// a -> b -> c : clockwise
 	D3DXVECTOR3 a, b, c;
 
+	// 法線
 	D3DXVECTOR3 CalcNormal()
 	{
 		D3DXVECTOR3 ab = b - a;
@@ -54,11 +59,26 @@ struct Face
 		D3DXVec3Normalize(&cross, &cross);
 		return cross;
 	}
+
+	//std::strong_ordering operator <=> (const Face&) const = default;
+
+	bool operator == (const Face& face_) const
+	{
+		if (this->a == face_.a && this->b == face_.b && this->c == face_.c) return true;
+		if (this->a == face_.b && this->b == face_.c && this->c == face_.a) return true;
+		if (this->a == face_.c && this->b == face_.a && this->c == face_.b) return true;
+		return false;
+	}
+
+	bool operator != (const Face& face_) const
+	{
+		return !(*this == face_);
+	}
 	
-	// 戻り値
-	// 1. 共有判定
-	// 2. 共有する点1
-	// 3. 共有する点2
+	// return :
+	// 1. sharing?
+	// 2. sharing point 1
+	// 3. sharing point 2
 	std::tuple<bool, D3DXVECTOR3, D3DXVECTOR3> IsShareEdge(const Face& face, bool temp) const
 	{
 		if (this->a == face.a)

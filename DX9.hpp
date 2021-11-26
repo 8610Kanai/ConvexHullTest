@@ -19,7 +19,4 @@ public:
 
 	IDirect3D9* pDirect3D;
 	IDirect3DDevice9* pDevice;
-
 };
-
-

@@ -22,6 +22,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_KEYDOWN:
         if(wParam == VK_ESCAPE) PostQuitMessage(0);
+
         break;
     }
 
@@ -102,7 +103,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     ID3DXMesh* mesh;
     HRESULT hr = D3DXLoadMeshFromX
     (
-        "res/YokohamaArena.x",
+        //"res/arrow.x",
+        //"res/koro_kari.x",
+        //"res/plate.x",
+        //"res/test.x",
+        "res/tree.x",
+        //"res/Yokoari_Dance_Pose.x",
+        //"res/Yokoari_Standing_Pose.x",
+        //"res/YokohamaArena.x",
         D3DXMESH_MANAGED,
         DX9::instance->pDevice,
         NULL,
@@ -145,7 +153,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
             {
                 convexHull->Render();
 
-                if (GetKeyState(VK_SPACE) >= 0)
+                if (GetKeyState(VK_SPACE) < 0)
                 {
                     D3DXMATRIX world;
                     D3DXMatrixIdentity(&world);
@@ -165,6 +173,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         }
     }
 
+    SAFE_RELEASE(vertexBuff);
     SAFE_RELEASE(mesh);
     SAFE_RELEASE(materials);
 

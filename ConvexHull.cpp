@@ -1,22 +1,22 @@
 #include "ConvexHull.hpp"
 
 #include <algorithm>
-#include <stack>
 #include <queue>
 #include <chrono>
+#include <thread>
 
 #include "CustomVertex.hpp"
 
 ConvexHull::ConvexHull(IDirect3DVertexBuffer9* vertexBuffer)
-	: vertices(), faces()
+	: origineVertices(), faces()
     , line(std::make_unique<LineSegment>())
     , point(std::make_unique<Point>())
+    , completed(false)
 {
-    this->GetVerticesFromBuffer(vertexBuffer, &this->vertices);
+    this->GetVerticesFromBuffer(vertexBuffer);
     
-    auto start = std::chrono::system_clock::now();
-    this->CreateConvexHull();
-    OutputDebugFormat("\n\n elapsed : {} ms.", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count());
+    std::thread thread(&ConvexHull::CreateConvexHull, this);
+    thread.detach();
 }
 
 ConvexHull::~ConvexHull()
@@ -24,7 +24,7 @@ ConvexHull::~ConvexHull()
     OUTPUT_DEBUG_FUNCNAME;
 }
 
-bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer, std::vector<D3DXVECTOR3>* pOutVertices)
+bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer)
 {
     if (!pInVertexBuffer) return false;
 
@@ -55,7 +55,7 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer, 
     if (SUCCEEDED(pInVertexBuffer->Lock(0, verticesSize, &ppbdata, 0)))
     {
         // 領域確保
-        pOutVertices->reserve(vertexNum);
+        this->origineVertices.reserve(vertexNum);
 
         D3DXVECTOR3 tempVertex;
 
@@ -65,7 +65,7 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer, 
         for (int i = 0; i < vertexNum; ++i)
         {
             memcpy(&tempVertex, ((ppb)+offset), sizeof(tempVertex));
-            pOutVertices->push_back(tempVertex);
+            this->origineVertices.push_back(tempVertex);
 
             // ポインタを移動
             ppb += vertexSize;
@@ -75,19 +75,23 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer, 
     }
     else return false;
 
-    OutputDebugFormat("\n v num : {}", pOutVertices->size());
+    OutputDebugFormat("\n vertex num : {}", this->origineVertices.size());
 
     return true;
 }
 
-void ConvexHull::CreateConvexHull()
+bool ConvexHull::CreateConvexHull()
 {
-    if (this->vertices.size() < 4) return;
+    if (this->origineVertices.size() < 4) return false;
+
+    auto start = std::chrono::system_clock::now();
+
+    std::vector<D3DXVECTOR3> vertices(this->origineVertices);
 
     ///////////////////////////////////////////////////////////
     //// function objects
 
-    // 四面体の符号付き体積
+    // signed volume of tetraahedron
     auto CalcSignedTetrahedronVolume = [](const D3DXVECTOR3& a, const D3DXVECTOR3& b, const D3DXVECTOR3& c, const D3DXVECTOR3& d)
     {
         D3DXVECTOR3 ab = b - a;
@@ -99,7 +103,7 @@ void ConvexHull::CreateConvexHull()
         return (/*abs*/(D3DXVec3Dot(&cross, &ad)) / 6.0f);
     };
 
-    // 点郡のうち四面体内の点を除いて返す
+    // remove points in tetrahedron
     auto RemovePointInsideTetrahedron = [&CalcSignedTetrahedronVolume](const std::vector<D3DXVECTOR3>& points, const D3DXVECTOR3& a, const D3DXVECTOR3& b, const D3DXVECTOR3& c, const D3DXVECTOR3& d)
     {
         std::vector<D3DXVECTOR3> newPoints;
@@ -120,8 +124,8 @@ void ConvexHull::CreateConvexHull()
         return newPoints;
     };
 
-    // 点郡のうち三角形面の上側で最も遠い点
-    // 戻り値 : 最遠点 (上側にない場合 { FLT_MIN, FLT_MIN, FLT_MIN } )
+    // find furthest point above triangler face
+    // return : furthest point (if not found return { FLT_MAX, FLT_MAX, FLT_MAX } )
     auto CalcFurthestPoint = [&CalcSignedTetrahedronVolume](const std::vector<D3DXVECTOR3>& points, const Face& face)
     {
         //OutputDebugFormat("\n pointnum : {}", points.size());
@@ -147,8 +151,8 @@ void ConvexHull::CreateConvexHull()
         return farPoint;
     };
 
-    // 点郡のうち面の上側の点を返す
-    auto GetPointsUpperSideOfFace = [&CalcSignedTetrahedronVolume](const std::vector<D3DXVECTOR3>& points, const Face& face)
+    // remove points under face
+    auto RemovePointsUnderFace = [&CalcSignedTetrahedronVolume](const std::vector<D3DXVECTOR3>& points, const Face& face)
     {
         std::vector<D3DXVECTOR3> newPoints;
         for (auto& point : points)
@@ -166,29 +170,38 @@ void ConvexHull::CreateConvexHull()
     ///////////////////////////////////////////////////////////
     //// first tetrahedron
 
-    D3DXVECTOR3 min = this->vertices.front();
+    //// Find min and max point
+    D3DXVECTOR3 min = vertices.front();
     D3DXVECTOR3 max = min;
 
-    for (size_t i = 1; i < this->vertices.size(); ++i)
+    for (size_t i = 1; i < vertices.size(); ++i)
     {
-        if ((this->vertices[i].x < min.x)
-            && this->vertices[i].y < min.y 
-            && this->vertices[i].z < min.z)
+        bool minConditions =
+            vertices[i].x < min.x
+            || ((vertices[i].x == min.x)
+                && ((vertices[i].y < min.y)
+                    || (vertices[i].y == min.y && vertices[i].z < min.z)));
+        if (minConditions)
         {
-            min = this->vertices[i];
+            min = vertices[i];
         }
 
-        if ((this->vertices[i].x > max.x)
-            && this->vertices[i].y > max.y
-            && this->vertices[i].z > max.z)
+        bool maxConditions =
+            vertices[i].x > max.x
+            || ((vertices[i].x == max.x)
+                && ((vertices[i].y > max.y)
+                    || (vertices[i].y == max.y && vertices[i].z > max.z)));
+
+        if (maxConditions)
         {
-            max = this->vertices[i];
+            max = vertices[i];
         }
     }
 
+    //// Find furthest point from segment(min, max)
     float maxLenSq = FLT_MIN;
     D3DXVECTOR3 far1(0, 0, 0);
-    for (auto& vertex : this->vertices)
+    for (auto& vertex : vertices)
     {
         D3DXVECTOR3 vec1 = min - max;
         D3DXVec3Normalize(&vec1, &vec1);
@@ -203,12 +216,13 @@ void ConvexHull::CreateConvexHull()
         }
     }
 
-    float maxSignedVolume = FLT_MIN;
-    D3DXVECTOR3 far2(0,0,0);
-    for (auto& vertex : this->vertices)
+    //// Find furthest point from Triangle(min, max, far1)
+    float maxSignedVolume = 0;
+    D3DXVECTOR3 far2(1,0,0);
+    for (auto& vertex : vertices)
     {
         float signedVolume = CalcSignedTetrahedronVolume(min, max, far1, vertex);
-        if (abs(signedVolume) > abs(maxSignedVolume))
+        if (abs(signedVolume) >= abs(maxSignedVolume))
         {
             maxSignedVolume = signedVolume;
             far2 = vertex;
@@ -219,35 +233,52 @@ void ConvexHull::CreateConvexHull()
         std::swap(min, max);
     }
 
+    // pending
+    D3DXVECTOR3 overlapCheck[4] = { min, max, far1, far2 };
+    for (int i = 0; i < 4; ++i)
+    {
+        for (int j = 0; j < 4; ++j)
+        {
+            if (i == j)continue;
+            if (overlapCheck[i] == overlapCheck[j])
+            {
+                OutputDebugFormat("\n\n ***************ERROR*************** \n\n");
+                return false;
+            }
+        }
+    }
+
     OutputDebugFormat("\n     min : {:.2f}, {:.2f}, {:.2f}", min.x, min.y, min.z);
     OutputDebugFormat("\n     max : {:.2f}, {:.2f}, {:.2f}", max.x, max.y, max.z);
     OutputDebugFormat("\n     far1 : {:.2f}, {:.2f}, {:.2f}", far1.x, far1.y, far1.z);
     OutputDebugFormat("\n     far2 : {:.2f}, {:.2f}, {:.2f}", far2.x, far2.y, far2.z);
 
-    // 四面体内の点の除去
-    this->vertices = RemovePointInsideTetrahedron(this->vertices, min, max, far1, far2);
-
+    // Remove points in tetrahedron
+    vertices = RemovePointInsideTetrahedron(vertices, min, max, far1, far2);
 
     this->faces.push_back({ min, max, far1 } );
     this->faces.push_back({ max, min, far2 } );
     this->faces.push_back({ far1, max, far2 });
     this->faces.push_back({ far1, far2, min });
 
-    std::queue<Face> queueFaces;
-    queueFaces.push({ min, max, far1 } );
-    queueFaces.push({ max, min, far2 } );
-    queueFaces.push({ far1, max, far2 });
-    queueFaces.push({ far1, far2, min });
+    std::queue<Face> face_queue;
+    face_queue.push({ min, max, far1 } );
+    face_queue.push({ max, min, far2 } );
+    face_queue.push({ far1, max, far2 });
+    face_queue.push({ far1, far2, min });
 
     ///////////////////////////////////////////////////////////
     //// loop
 
-    while (!this->vertices.empty() && !queueFaces.empty())
+    int loopnum = 0;
+    while (!vertices.empty() && !face_queue.empty())
     {
-        Face face = queueFaces.front();
-        queueFaces.pop();
+        ++loopnum;
 
-        std::vector<D3DXVECTOR3> upperSidePoints = GetPointsUpperSideOfFace(this->vertices, face);
+        Face face = face_queue.front();
+        face_queue.pop();
+
+        std::vector<D3DXVECTOR3> upperSidePoints = RemovePointsUnderFace(vertices, face);
         auto furthest = CalcFurthestPoint(upperSidePoints, face);
         if (furthest == D3DXVECTOR3(FLT_MAX, FLT_MAX, FLT_MAX)) continue;
 
@@ -271,62 +302,83 @@ void ConvexHull::CreateConvexHull()
 
         for (auto& visibleFace : visibleFaces)
         {
-            // 不要な頂点の除外
-            this->vertices = RemovePointInsideTetrahedron(this->vertices, visibleFace.a, visibleFace.b, visibleFace.c, furthest);
+            // remove inner points
+            vertices = RemovePointInsideTetrahedron(vertices, visibleFace.a, visibleFace.b, visibleFace.c, furthest);
 
-
+            // create new faces
             for (auto& invisibleFace : invisibleFaces)
             {
-                auto [isShared, shareP1, shareP2] = visibleFace.IsShareEdge(invisibleFace, true);
-                if (isShared)
+                auto [isSharing, shareP1, shareP2] = visibleFace.IsShareEdge(invisibleFace, true);
+                if (isSharing)
                 {
+                    D3DXVECTOR3 v1 = furthest - shareP1;
+                    D3DXVECTOR3 v2 = furthest - shareP2;
+
+                    D3DXVec3Normalize(&v1, &v1);
+                    D3DXVec3Normalize(&v2, &v2);
+
+                    if (1 - abs(D3DXVec3Dot(&v1, &v2)) <= FLT_EPSILON) continue;
+
                     Face newFace = { shareP1, shareP2, furthest };
                     this->faces.push_back(newFace);
-                    queueFaces.push(newFace);
+                    face_queue.push(newFace);
                 }
             }
         }
     }
 
+    OutputDebugFormat("\n  face num :  {}", faces.size());
 
-    OutputDebugFormat("\n     vnun :  {}", vertices.size());
+    OutputDebugFormat("\n\n elapsed : {} ms.\n\n", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count());
+
+    this->completed = true;
+
+    return true;
 }
 
 
 void ConvexHull::Render()
 {
+
+#if 1
+    // render origine vertices
+    for (auto& vertex : this->origineVertices)
+    {
+        this->point->SetLocation(vertex.x, vertex.y, vertex.z);
+        this->point->Render();
+    }
+#endif
+
+
+    if (!this->completed) return;
+
+#if 1
     for (size_t i = 0; i < this->faces.size(); ++i)
     {
         Face face = this->faces[i];
 
-        //if (i == this->faces.size() - 1)
-        //{
-        //    line->SetMaterial({ .Emissive = {1,1,0} });
-        //}
-        //else line->SetMaterial({ .Emissive = {1,1,1} });
+        this->line->SetStartEnd(&face.a, &face.b);
+        this->line->Render();
+        this->line->SetStartEnd(&face.b, &face.c);
+        this->line->Render();
+        this->line->SetStartEnd(&face.c, &face.a);
+        this->line->Render();
 
-        line->SetStartEnd(&face.a, &face.b);
-        line->Render();
-        line->SetStartEnd(&face.b, &face.c);
-        line->Render();
-        line->SetStartEnd(&face.c, &face.a);
-        line->Render();
-
-        //D3DXVECTOR3 center = (face.a + face.b + face.c) / 3.0f;
-        //D3DXVECTOR3 end = center + face.CalcNormal() * 0.05f;
-        //line->SetStartEnd(&center, &end);
-        //line->Render();
-        //D3DXVECTOR3 ab = face.b - face.a;
-        //D3DXVec3Normalize(&ab, &ab);
-        //ab *= 0.01f;
-        //ab += end;
-        //line->SetStartEnd(&end, &ab);
-        //line->Render();
+        // render normal
+        if (GetKeyState('N') < 0)
+        {
+            D3DXVECTOR3 center = (face.a + face.b + face.c) / 3.0f;
+            D3DXVECTOR3 end = center + face.CalcNormal() * 0.05f;
+            this->line->SetStartEnd(&center, &end);
+            this->line->Render();
+            D3DXVECTOR3 ab = face.b - face.a;
+            D3DXVec3Normalize(&ab, &ab);
+            ab *= 0.01f;
+            ab += end;
+            this->line->SetStartEnd(&end, &ab);
+            this->line->Render();
+        }
     }
+#endif
 
-    for (auto& vertex : this->vertices)
-    {
-        point->SetLocation(vertex.x, vertex.y, vertex.z);
-        point->Render();
-    }
 }
