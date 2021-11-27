@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <queue>
 #include <chrono>
-#include <thread>
 
 #include "CustomVertex.hpp"
 
@@ -11,16 +10,17 @@ ConvexHull::ConvexHull(IDirect3DVertexBuffer9* vertexBuffer)
     : origineVertices(), faces()
     , line(std::make_unique<LineSegment>())
     , point(std::make_unique<Point>())
+    , createTask()
     , isCompleted(false)
 {
     this->GetVerticesFromBuffer(vertexBuffer);
-    
     std::thread thread(&ConvexHull::CreateConvexHull, this);
-    thread.detach();
+    this->createTask.swap(thread);
 }
 
 ConvexHull::~ConvexHull()
 {
+    this->createTask.join();
     OUTPUT_DEBUG_FUNCNAME;
 }
 
@@ -295,7 +295,6 @@ bool ConvexHull::CreateConvexHull()
                 OutputDebugFormat("\n\n **********************ERROR*******************\n\n");
                 return false;
             }
-
             
             float signedVolume = CalcSignedTetrahedronVolume(face.a, face.b, face.c, furthest);
             if (signedVolume <= 0)
@@ -364,7 +363,7 @@ bool ConvexHull::CreateConvexHull()
 void ConvexHull::Render()
 {
 
-#if 1
+#if 0
     // render origine vertices
     for (auto& vertex : this->origineVertices)
     {

@@ -2,6 +2,7 @@
 
 #include <compare>
 #include <vector>
+#include <thread>
 #include "DX9.hpp"
 #include "LineSegment.hpp"
 #include "Point.hpp"
@@ -38,6 +39,8 @@ private:
 	// use draw
 	std::unique_ptr<LineSegment> line;
 	std::unique_ptr<Point> point;
+
+	std::thread createTask;
 
 	// creation completed?
 	bool isCompleted;
