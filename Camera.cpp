@@ -2,7 +2,7 @@
 #include "DX9.hpp"
 
 Camera::Camera(const HWND* hWnd)
-	: eye(0, 3, -3), at(0, 0, 0), up(0, 1, 0), view(), proj()
+    : eye(0, 3, -3), at(0, 0, 0), up(0, 1, 0), view(), proj()
     , mousePos(), preMousePos(), cameraSpeed(0.025f)
 {
 	D3DXMatrixLookAtLH(&this->view, &this->eye, &this->at, &this->up);

@@ -8,7 +8,7 @@
 #include "CustomVertex.hpp"
 
 ConvexHull::ConvexHull(IDirect3DVertexBuffer9* vertexBuffer)
-	: origineVertices(), faces()
+    : origineVertices(), faces()
     , line(std::make_unique<LineSegment>())
     , point(std::make_unique<Point>())
     , isCompleted(false)

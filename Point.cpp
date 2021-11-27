@@ -4,8 +4,8 @@
 #include "CustomVertex.hpp"
 
 Point::Point()
-	: worldMatrix(), material({ .Emissive = {1,1,1} })
-	, vertexBuffer(nullptr), indexBuffer(nullptr)
+    : worldMatrix(), material({ .Emissive = {1,1,1} })
+    , vertexBuffer(nullptr), indexBuffer(nullptr)
 {
 	D3DXMatrixIdentity(&this->worldMatrix);
 	this->Init();

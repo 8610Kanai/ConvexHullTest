@@ -3,10 +3,10 @@
 #include "CustomVertex.hpp"
 
 LineSegment::LineSegment()
-	: start({ 0,0,0 }), end({ 0,0,0 })
-	, offset({ 0,0,0 }), scaling({ 0,0,0 })
-	, worldMatrix(), rotationMatrix()
-	, material({ .Emissive = {1,1,1} }), vertexBuffer(nullptr)
+    : start({ 0,0,0 }), end({ 0,0,0 })
+    , offset({ 0,0,0 }), scaling({ 0,0,0 })
+    , worldMatrix(), rotationMatrix()
+    , material({ .Emissive = {1,1,1} }), vertexBuffer(nullptr)
 {
 	D3DXMatrixIdentity(&this->worldMatrix);
 	D3DXMatrixIdentity(&this->rotationMatrix);
