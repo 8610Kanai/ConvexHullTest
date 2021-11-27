@@ -3,7 +3,7 @@
 #include "utils.hpp"
 #include "const.hpp"
 
-// (è¨Ç≥Ç¢élñ ëÃ)
+// (small tetrahedron)
 class Point
 {
 public:

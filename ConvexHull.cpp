@@ -11,7 +11,7 @@ ConvexHull::ConvexHull(IDirect3DVertexBuffer9* vertexBuffer)
 	: origineVertices(), faces()
     , line(std::make_unique<LineSegment>())
     , point(std::make_unique<Point>())
-    , completed(false)
+    , isCompleted(false)
 {
     this->GetVerticesFromBuffer(vertexBuffer);
     
@@ -55,12 +55,10 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer)
     void* ppbdata;
     if (SUCCEEDED(pInVertexBuffer->Lock(0, verticesSize, &ppbdata, 0)))
     {
-        // 領域確保
         this->origineVertices.reserve(vertexNum);
 
         D3DXVECTOR3 tempVertex;
 
-        // ポインタ移動用
         BYTE* ppb = reinterpret_cast<BYTE*>(ppbdata);
 
         for (int i = 0; i < vertexNum; ++i)
@@ -68,7 +66,6 @@ bool ConvexHull::GetVerticesFromBuffer(IDirect3DVertexBuffer9* pInVertexBuffer)
             memcpy(&tempVertex, ((ppb)+offset), sizeof(tempVertex));
             this->origineVertices.push_back(tempVertex);
 
-            // ポインタを移動
             ppb += vertexSize;
         }
 
@@ -332,7 +329,7 @@ bool ConvexHull::CreateConvexHull()
 
     OutputDebugFormat("\n\n elapsed : {} ms.\n\n", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count());
 
-    this->completed = true;
+    this->isCompleted = true;
 
     return true;
 }
@@ -351,7 +348,7 @@ void ConvexHull::Render()
 #endif
 
 
-    if (!this->completed) return;
+    if (!this->isCompleted) return;
 
 #if 1
     for (size_t i = 0; i < this->faces.size(); ++i)

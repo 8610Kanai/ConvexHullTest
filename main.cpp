@@ -103,14 +103,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     ID3DXMesh* mesh;
     HRESULT hr = D3DXLoadMeshFromX
     (
-        //"res/arrow.x",
-        //"res/koro_kari.x",
-        //"res/plate.x",
-        //"res/test.x",
         "res/tree.x",
-        //"res/Yokoari_Dance_Pose.x",
-        //"res/Yokoari_Standing_Pose.x",
-        //"res/YokohamaArena.x",
         D3DXMESH_MANAGED,
         DX9::instance->pDevice,
         NULL,

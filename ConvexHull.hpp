@@ -39,7 +39,8 @@ private:
 	std::unique_ptr<LineSegment> line;
 	std::unique_ptr<Point> point;
 
-	bool completed;
+	// creation completed?
+	bool isCompleted;
 
 };
 
