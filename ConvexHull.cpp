@@ -93,10 +93,10 @@ bool ConvexHull::CreateConvexHull()
     auto CalcSignedTetrahedronVolume = [](const D3DXVECTOR3& a, const D3DXVECTOR3& b, const D3DXVECTOR3& c, const D3DXVECTOR3& d)
     {
         D3DXVECTOR3 ab = b - a;
-        D3DXVECTOR3 ca = c - a;
+        D3DXVECTOR3 ac = c - a;
         D3DXVECTOR3 ad = d - a;
         D3DXVECTOR3 cross(0, 0, 0);
-        D3DXVec3Cross(&cross, &ab, &ca);
+        D3DXVec3Cross(&cross, &ab, &ac);
 
         return (/*abs*/(D3DXVec3Dot(&cross, &ad)) / 6.0f);
     };
