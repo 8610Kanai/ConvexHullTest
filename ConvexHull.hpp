@@ -31,7 +31,7 @@ public:
 
 private:
 
-	// 
+	//
 	std::vector<D3DXVECTOR3> origineVertices;
 	std::vector<Face> faces;
 	std::vector<Face> temps;
@@ -57,9 +57,9 @@ struct Face
 	D3DXVECTOR3 CalcNormal()
 	{
 		D3DXVECTOR3 ab = b - a;
-		D3DXVECTOR3 ca = c -a;
+		D3DXVECTOR3 ac = c - a;
 		D3DXVECTOR3 cross(0,0,0);
-		D3DXVec3Cross(&cross, &ab, &ca);
+		D3DXVec3Cross(&cross, &ab, &ac);
 		D3DXVec3Normalize(&cross, &cross);
 		return cross;
 	}
@@ -78,7 +78,7 @@ struct Face
 	{
 		return !(*this == face_);
 	}
-	
+
 	// return :
 	// 1. sharing?
 	// 2. sharing point 1
