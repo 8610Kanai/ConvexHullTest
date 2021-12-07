@@ -270,7 +270,7 @@ bool ConvexHull::CreateConvexHull()
 
     while (!vertices.empty() && !face_queue.empty())
     {
-        // 10s elapsed 
+        // 10s elapsed
         if (10000 < std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count())
         {
             OutputDebugFormat("\n\n **********************ERROR*******************\n\n");
@@ -289,13 +289,13 @@ bool ConvexHull::CreateConvexHull()
 
         for (auto& face : this->faces)
         {
-            // 10s elapsed 
+            // 10s elapsed
             if (10000 < std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count())
             {
                 OutputDebugFormat("\n\n **********************ERROR*******************\n\n");
                 return false;
             }
-            
+
             float signedVolume = CalcSignedTetrahedronVolume(face.a, face.b, face.c, furthest);
             if (signedVolume <= 0)
             {
@@ -311,7 +311,7 @@ bool ConvexHull::CreateConvexHull()
 
         for (auto& visibleFace : visibleFaces)
         {
-            // 10s elapsed 
+            // 10s elapsed
             if (10000 < std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count())
             {
                 OutputDebugFormat("\n\n **********************ERROR*******************\n\n");
@@ -324,7 +324,7 @@ bool ConvexHull::CreateConvexHull()
             // create new faces
             for (auto& invisibleFace : invisibleFaces)
             {
-                // 10s elapsed 
+                // 10s elapsed
                 if (10000 < std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start).count())
                 {
                     OutputDebugFormat("\n\n **********************ERROR*******************\n\n");
@@ -403,5 +403,4 @@ void ConvexHull::Render()
         }
     }
 #endif
-
 }
