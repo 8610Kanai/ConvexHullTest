@@ -44,7 +44,7 @@ bool DX9::Init(const HWND* hWnd)
     };
 
     // hard x hard
-    if (FAILED(this->pDirect3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, *hWnd, 
+    if (FAILED(this->pDirect3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, *hWnd,
         D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &this->pDevice)))
     {
         // hard x soft
