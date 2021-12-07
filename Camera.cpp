@@ -22,36 +22,40 @@ Camera::~Camera()
 
 void Camera::MoveFPS(const HWND* hWnd)
 {
-    D3DXVECTOR3 mouseDirection =
+
+    if (GetKeyState(VK_RBUTTON) < 0)
     {
-        static_cast<float>(this->mousePos.x - this->preMousePos.x),
-        -static_cast<float>(this->mousePos.y - this->preMousePos.y),
-        0.0f
-    };
+        D3DXVECTOR3 mouseDirection =
+        {
+            static_cast<float>(this->mousePos.x - this->preMousePos.x),
+            -static_cast<float>(this->mousePos.y - this->preMousePos.y),
+            0.0f
+        };
 
-    D3DXVECTOR3 lookVec(this->view._13, this->view._23, this->view._33);
+        D3DXVECTOR3 lookVec(this->view._13, this->view._23, this->view._33);
 
-    this->at += D3DXVECTOR3(lookVec.z * mouseDirection.x, mouseDirection.y, -lookVec.x * mouseDirection.x) * 0.05f;
+        this->at += D3DXVECTOR3(lookVec.z * mouseDirection.x, mouseDirection.y, -lookVec.x * mouseDirection.x) * 0.075f;
 
-    auto MoveCameraBody = [&lookVec, this](float right, float up, float forward)
-    {
-        D3DXVECTOR3 moveRightVec(lookVec.z * right, 0, -lookVec.x * right);
-        D3DXVECTOR3 moveUpVec(0, up, 0);
+        auto MoveCameraBody = [&lookVec, this](float right, float up, float forward)
+        {
+            D3DXVECTOR3 moveRightVec(lookVec.z * right, 0, -lookVec.x * right);
+            D3DXVECTOR3 moveUpVec(0, up, 0);
 
-        D3DXVECTOR3 moveVec = forward * lookVec + moveRightVec + moveUpVec;
-        this->eye += moveVec;
-        this->at  += moveVec;
-    };
+            D3DXVECTOR3 moveVec = forward * lookVec + moveRightVec + moveUpVec;
+            this->eye += moveVec;
+            this->at += moveVec;
+        };
 
-    if(GetKeyState('W') < 0) MoveCameraBody(0, 0, this->cameraSpeed);
-    if(GetKeyState('S') < 0) MoveCameraBody(0, 0, -this->cameraSpeed);
-    if(GetKeyState('D') < 0) MoveCameraBody( this->cameraSpeed, 0, 0);
-    if(GetKeyState('A') < 0) MoveCameraBody(-this->cameraSpeed, 0, 0);
-    if(GetKeyState('E') < 0) MoveCameraBody(0,  this->cameraSpeed, 0);
-    if(GetKeyState('Q') < 0) MoveCameraBody(0, -this->cameraSpeed, 0);
+        if (GetKeyState('W') < 0) MoveCameraBody(0, 0, this->cameraSpeed);
+        if (GetKeyState('S') < 0) MoveCameraBody(0, 0, -this->cameraSpeed);
+        if (GetKeyState('D') < 0) MoveCameraBody(this->cameraSpeed, 0, 0);
+        if (GetKeyState('A') < 0) MoveCameraBody(-this->cameraSpeed, 0, 0);
+        if (GetKeyState('E') < 0) MoveCameraBody(0, this->cameraSpeed, 0);
+        if (GetKeyState('Q') < 0) MoveCameraBody(0, -this->cameraSpeed, 0);
 
-    D3DXMatrixLookAtLH(&this->view, &this->eye, &this->at, &this->up);
-    DX9::instance->pDevice->SetTransform(D3DTS_VIEW, &view);
+        D3DXMatrixLookAtLH(&this->view, &this->eye, &this->at, &this->up);
+        DX9::instance->pDevice->SetTransform(D3DTS_VIEW, &view);
+    }
 
     this->preMousePos = this->mousePos;
 
