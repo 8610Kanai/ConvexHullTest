@@ -34,7 +34,6 @@ private:
 	//
 	std::vector<D3DXVECTOR3> origineVertices;
 	std::vector<Face> faces;
-	std::vector<Face> temps;
 
 	// use draw
 	std::unique_ptr<LineSegment> line;
