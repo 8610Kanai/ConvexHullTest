@@ -12,7 +12,7 @@ public:
 	void MoveFPS(const HWND* hWnd);
 
 private:
-	
+
 	D3DXVECTOR3 eye, at, up;
 
 	D3DXMATRIX view, proj;
