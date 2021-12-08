@@ -1,2 +1,4 @@
 # ConvexHullTest
-Create convex hull from xfile.
+Create convex hull from teapot.
+
+<p><img src="./ConvexHull.png"/></p>
