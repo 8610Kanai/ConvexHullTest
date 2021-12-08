@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 
+
 #include "utils.hpp"
 #include "const.hpp"
 #include "DX9.hpp"
@@ -13,7 +14,7 @@
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) 
+    switch (message)
     {
     case WM_DESTROY:
         PostQuitMessage(0);
@@ -33,7 +34,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
     ///////////////////////////////////////////////////////
-    ///// create window
+    // create window
 
     WNDCLASSEX wcex =
     {
@@ -71,18 +72,18 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 
     ///////////////////////////////////////////////////////
-    ///// init directx9
+    // init directx9
 
     (new DX9())->Init(&hWnd);
 
 
     ///////////////////////////////////////////////////////
-    ///// init camera
+    // init camera
 
     auto camera = std::make_unique<Camera>(&hWnd);
 
     ///////////////////////////////////////////////////////
-    ///// init light
+    // init light
 
     D3DLIGHT9 light =
     {
@@ -98,34 +99,43 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
     ///////////////////////////////////////////////////////
     // test
 
-    ID3DXBuffer* materials;
-    DWORD numMaterials;
-    ID3DXMesh* mesh;
-    HRESULT hr = D3DXLoadMeshFromX
-    (
-        "res/tree.x",
-        D3DXMESH_MANAGED,
-        DX9::instance->pDevice,
-        NULL,
-        &materials,
-        NULL,
-        &numMaterials,
-        &mesh
-    );
+    // teapot mesh
+    ID3DXMesh* teapotMesh;
+    HRESULT hr = D3DXCreateTeapot(DX9::instance->pDevice, &teapotMesh, NULL);
 
     if (FAILED(hr))
     {
-        OutputDebugString("XModel::Init() Error\n");
+        OutputDebugString("D3DXCreateTeapot Error\n");
         return false;
     }
 
+    // teapot mat
+    D3DMATERIAL9 teapotMat =
+    {
+        .Diffuse = {0.5,0.5,0.5},
+        .Ambient = {0.2,0.2,0.2}
+    };
+
+    // create teapot mesh's convexHull
     IDirect3DVertexBuffer9* vertexBuff;
-    mesh->GetVertexBuffer(&vertexBuff);
+    teapotMesh->GetVertexBuffer(&vertexBuff);
     auto convexHull = std::make_unique<ConvexHull>(vertexBuff);
 
+    // point
+    auto point = std::make_unique<Point>();
+    point->SetLocation(1, 0, 0);
+
+    // line
+    auto line = std::make_unique<LineSegment>();
+
+    // axes
+    D3DXVECTOR3 o(0, 0, 0);
+    D3DXVECTOR3 vx(100, 0, 0);
+    D3DXVECTOR3 vy(0, 100, 0);
+    D3DXVECTOR3 vz(0, 0, 100);
 
     ///////////////////////////////////////////////////////
-    ///// main loop
+    // main loop
 
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));
@@ -139,26 +149,39 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         }
         else
         {
-            camera->MoveFPS(&hWnd);
-
             DX9::instance->pDevice->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x192f60, 1.0f, 0);
             if (SUCCEEDED(DX9::instance->pDevice->BeginScene()))
             {
+                // fps camera
+                camera->MoveFPS(&hWnd);
+
+                // axes
+                line->SetMaterial({ .Emissive = {1,0,1,1} });
+                line->SetStartEnd(&o, &vx);
+                line->Render();
+                line->SetStartEnd(&o, &vy);
+                line->Render();
+                line->SetStartEnd(&o, &vz);
+                line->Render();
+                line->SetMaterial({ .Emissive = {1,1,1,1} });
+
+
                 convexHull->Render();
 
-                if (GetKeyState(VK_SPACE) < 0)
+                // render teapot when spacebar is not pressed.
+                D3DXMATRIX world;
+                if (GetKeyState(VK_SPACE) >= 0)
                 {
-                    D3DXMATRIX world;
                     D3DXMatrixIdentity(&world);
-                    world._41 = 0;
                     DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &world);
-                    for (int i = 0; i < numMaterials; ++i)
-                    {
-                        D3DXMATERIAL mat = ((D3DXMATERIAL*)(materials->GetBufferPointer()))[i];
-                        DX9::instance->pDevice->SetMaterial(&(mat.MatD3D));
-                        mesh->DrawSubset(i);
-                    }
+                    DX9::instance->pDevice->SetMaterial(&teapotMat);
+                    teapotMesh->DrawSubset(0);
                 }
+                world._43 = 3;
+                DX9::instance->pDevice->SetTransform(D3DTS_WORLD, &world);
+                DX9::instance->pDevice->SetMaterial(&teapotMat);
+                teapotMesh->DrawSubset(0);
+
 
                 DX9::instance->pDevice->EndScene();
             }
@@ -166,9 +189,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         }
     }
 
-    SAFE_RELEASE(vertexBuff);
-    SAFE_RELEASE(mesh);
-    SAFE_RELEASE(materials);
+    SAFE_RELEASE(teapotMesh);
 
     OutputDebugFormat("\n{} Finished.\n\n", myApp::TITLE_NAME);
 
