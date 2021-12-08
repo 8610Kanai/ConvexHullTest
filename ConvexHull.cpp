@@ -87,7 +87,7 @@ bool ConvexHull::CreateConvexHull()
     std::vector<D3DXVECTOR3> vertices(this->origineVertices);
 
     ///////////////////////////////////////////////////////////
-    //// function objects
+    // function objects
 
     // signed volume of tetraahedron
     auto CalcSignedTetrahedronVolume = [](const D3DXVECTOR3& a, const D3DXVECTOR3& b, const D3DXVECTOR3& c, const D3DXVECTOR3& d)
@@ -166,9 +166,9 @@ bool ConvexHull::CreateConvexHull()
 
 
     ///////////////////////////////////////////////////////////
-    //// first tetrahedron
+    // first tetrahedron
 
-    //// Find min and max point
+    // Find min and max point
     D3DXVECTOR3 min = vertices.front();
     D3DXVECTOR3 max = min;
 
@@ -196,7 +196,7 @@ bool ConvexHull::CreateConvexHull()
         }
     }
 
-    //// Find furthest point from segment(min, max)
+    // Find furthest point from segment(min, max)
     float maxLenSq = FLT_MIN;
     D3DXVECTOR3 far1(0, 0, 0);
     for (auto& vertex : vertices)
@@ -214,7 +214,7 @@ bool ConvexHull::CreateConvexHull()
         }
     }
 
-    //// Find furthest point from Triangle(min, max, far1)
+    // Find furthest point from Triangle(min, max, far1)
     float maxSignedVolume = 0;
     D3DXVECTOR3 far2(1,0,0);
     for (auto& vertex : vertices)
@@ -266,7 +266,7 @@ bool ConvexHull::CreateConvexHull()
     face_queue.push({ far1, far2, min });
 
     ///////////////////////////////////////////////////////////
-    //// loop
+    // loop
 
     while (!vertices.empty() && !face_queue.empty())
     {
